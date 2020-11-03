@@ -1,84 +1,241 @@
-openapi: 3.0.2
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/EFT-Solutions-Ltd/SpiralQRS/1.0.0
 info:
-  version: 1.0.0
-  title: Example.com
-  termsOfService: 'https://example.com/terms/'
+  description: This is a API for Spiral QRS (Queuing Reservation System)
+  version: "1.0.0"
+  title: Spiral QRS API
   contact:
-    email: contact@example.com
-    url: 'http://example.com/contact'
+    email: it.support@eftsolutions.com
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-  x-logo:
-    url: 'https://redocly.github.io/openapi-template/logo.png'
-  description: >
-    This is an **example** API to demonstrate features of OpenAPI specification
-
-    # Introduction
-
-    This API definition is intended to to be a good starting point for
-    describing your API in 
-
-    [OpenAPI/Swagger
-    format](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md).
-
-    It also demonstrates features of
-    [create-openapi-repo](https://github.com/Redocly/create-openapi-repo) tool
-    and 
-
-    [Redoc](https://github.com/Redocly/Redoc) documentation engine. So beyond
-    the standard OpenAPI syntax we use a few 
-
-    [vendor
-    extensions](https://github.com/Redocly/Redoc/blob/master/docs/redoc-vendor-extensions.md).
-
-
-    # OpenAPI Specification
-
-    The goal of The OpenAPI Specification is to define a standard,
-    language-agnostic interface to REST APIs which
-
-    allows both humans and computers to discover and understand the capabilities
-    of the service without access to source
-
-    code, documentation, or through network traffic inspection. When properly
-    defined via OpenAPI, a consumer can 
-
-    understand and interact with the remote service with a minimal amount of
-    implementation logic. Similar to what
-
-    interfaces have done for lower-level programming, OpenAPI removes the
-    guesswork in calling the service.
-externalDocs:
-  description: Find out how to create a GitHub repo for your OpenAPI definition.
-  url: 'https://github.com/Rebilly/generator-openapi-repo'
 tags:
-  - name: Echo
-    description: Example echo operations
-  - name: User
-    description: Operations about user
-servers:
-  - url: 'http://example.com/api/v1'
-  - url: 'https://example.com/api/v1'
+  - name: Kiosk
+    description: API calls for Kiosk that used for release tickets.
+  - name: developers
+    description: Operations available to regular developers
 paths:
-  '/users/{username}':
-    $ref: 'paths/users@{username}.yaml'
-  /echo:
-    $ref: paths/echo.yaml
+  /inventory:
+    get:
+      tags:
+        - developers
+      summary: searches inventory
+      operationId: searchInventory
+      description: |
+        By passing in the appropriate options, you can search for
+        available inventory in the system
+      parameters:
+        - in: query
+          name: searchString
+          description: pass an optional search string for looking up inventory
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: skip
+          description: number of records to skip for pagination
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - in: query
+          name: limit
+          description: maximum number of records to return
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 50
+      responses:
+        '200':
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+        '400':
+          description: bad input parameter
+    post:
+      tags:
+        - admins
+      summary: adds an inventory item
+      operationId: addInventory
+      description: |
+        Adds an item to the system <br>
+        Testing
+      responses:
+        '201':
+          description: item created
+        '400':
+          description: 'invalid input, object invalid'
+        '409':
+          description: an existing item already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItem'
+        description: Inventory item to add
+  /merchants/{clientId}/tickets/{orderId}:
+    put:
+      tags:
+        - Kiosk
+      summary: createp new ticket
+      operationId: newTicket
+      description: |
+        Creating a new ticket
+      parameters:
+        - in: path
+          name: clientId
+          description: the client ID represented for the merchant account
+          schema:
+            type: string
+          example: 'eftit'
+          required: true
+        - in: path
+          name: orderId
+          description: the client ID represented for the merchant account
+          schema:
+            type: string
+          example: 'eftit'
+          required: true
+        - in: query
+          name: orderId
+          description: UUID generated in random
+          example: '5914173f-30fe-49b5-a445-8d2d57049564'
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: storeId
+          description: to indicate which store of the merchant
+          example: 'SHOP-012'
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: queueId
+          description: to indicate which queue for the ticket
+          required: true
+          example: 'Q1'
+          schema:
+            type: string
+        - in: query
+          name: counterId
+          description: to indicate specified counter (table)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: query/command execuated normally
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+        '400':
+          description: bad input parameter
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItem'
+        description: Inventory item to add 
+      operationId: pickTicket
+      description: pick a ticket
+      parameters:
+        - in: path
+          name: clientId
+          description: the client ID represented for the merchant account
+          schema:
+            type: string
+          example: 'eftit'
+          required: true
+        - in: path
+          name: orderId
+          description: UUID generated in random
+          example: '5914173f-30fe-49b5-a445-8d2d57049564'
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: storeId
+          description: to indicate which store of the merchant
+          example: 'SHOP-012'
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: queueId
+          description: to indicate which queue for the ticket
+          required: true
+          example: 'Q1'
+          schema:
+            type: string
+        - in: query
+          name: counterId
+          description: to indicate specified counter (table)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: query/command execuated normally
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+        '400':
+          description: bad input parameter
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItem'
+        description: Inventory item to add 
 components:
-  securitySchemes:
-    main_auth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: 'http://example.com/api/oauth/dialog'
-          scopes:
-            'read:users': read users info
-            'write:users': modify or remove users
-    api_key:
-      type: apiKey
-      in: header
-      name: api_key
-    basic_auth:
-      type: http
-      scheme: basic
+  schemas:
+    InventoryItem:
+      type: object
+      required:
+        - id
+        - name
+        - manufacturer
+        - releaseDate
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+        name:
+          type: string
+          example: Widget Adapter
+        releaseDate:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        manufacturer:
+          $ref: '#/components/schemas/Manufacturer'
+    Manufacturer:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: ACME Corporation
+        homePage:
+          type: string
+          format: url
+          example: 'https://www.acme-corp.com'
+        phone:
+          type: string
+          example: 408-867-5309
+      type: object
+
